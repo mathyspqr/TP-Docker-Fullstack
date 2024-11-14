@@ -292,14 +292,12 @@ volumes:
     - `build`: Chemin vers le Dockerfile du backend.
     - `ports`: Mappe le port 5000 du conteneur au port 5000 de l'hôte.
     - `environment`: Définit les variables d'environnement pour MySQL.
-    - `networks`: Associe le service au réseau `app_network`.
     - `depends_on`: Indique que le service backend dépend des services mysql et migrate.
     - `healthcheck`: Vérifie la santé du service backend.
 
   - `frontend`: Service pour l'application ReactJS.
     - `build`: Chemin vers le Dockerfile du frontend.
     - `ports`: Mappe le port 3000 du conteneur au port 3000 de l'hôte.
-    - `networks`: Associe le service au réseau `app_network`.
     - `depends_on`: Indique que le service frontend dépend du service backend.
     - `healthcheck`: Vérifie la santé du service frontend.
 
@@ -307,27 +305,23 @@ volumes:
     - `image`: Utilise l'image MySQL version 8.0.
     - `environment`: Définit les variables d'environnement pour MySQL.
     - `volumes`: Monte le volume `mysql_data` pour persister les données.
-    - `networks`: Associe le service au réseau `app_network`.
     - `healthcheck`: Vérifie la santé du service MySQL.
 
   - `phpmyadmin`: Service pour phpMyAdmin.
     - `image`: Utilise l'image phpMyAdmin.
     - `environment`: Définit les variables d'environnement pour phpMyAdmin.
     - `ports`: Mappe le port 8081 du conteneur au port 80 de l'hôte.
-    - `networks`: Associe le service au réseau `app_network`.
 
   - `migrate`: Service pour exécuter les migrations de la base de données.
     - `build`: Chemin vers le Dockerfile du backend.
     - `command`: Commande pour exécuter les migrations.
     - `environment`: Définit les variables d'environnement pour MySQL.
-    - `networks`: Associe le service au réseau `app_network`.
     - `depends_on`: Indique que le service migrate dépend du service mysql.
 
   - `nginx`: Service pour le reverse proxy Nginx.
     - `image`: Utilise l'image Nginx.
     - `volumes`: Monte le fichier de configuration Nginx.
     - `ports`: Mappe le port 80 du conteneur au port 80 de l'hôte.
-    - `networks`: Associe le service au réseau `app_network`.
     - `depends_on`: Indique que le service nginx dépend des services frontend et backend.
     - `healthcheck`: Vérifie la santé du service Nginx.
 

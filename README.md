@@ -71,7 +71,7 @@ class Config:
   SQLALCHEMY_TRACK_MODIFICATIONS = False
 ```
 
-Cette configuration utilise les variables d'environnement pour définir l'URI de la base de données, ce qui permet de garder les informations sensibles hors du code source. Nous avons utilisé la dépendance SQLAlchemy pour interagir avec la base de données de manière ORM (Object-Relational Mapping).
+Cette configuration utilise les variables d'environnement pour définir l'URI de la base de données, J'ai utilisé la dépendance SQLAlchemy pour interagir avec la base de données de manière ORM (Object-Relational Mapping).
 
 ### Configuration dans `docker-compose.yml`
 

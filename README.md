@@ -1,227 +1,335 @@
-# todo-app-flask-reactjs
+# Todo App Flask ReactJS Docker
 
-## Updating the repository...
+## Prérequis
 
-This is a basic application with the objective of being able to save your notes and have them stored in a database. The user is able to perform basic actions such as create, read, update and delete this data, a basic CRUD.
+Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
 
-## Table of contents
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-- [Built with](#built-with)
-- [Project requirements and how to use it](#project-requirements-and-how-to-use-it)
-  - [Frontend](#frontend)
-  - [Backend](#backend)
-  - [REST API](#rest-api)
-- [Image gallery](#image-gallery)
-  - [Desktop](#desktop)
-  - [Mobile](#mobile)
+## Installation
 
-## Built with
+1. Clonez le dépôt :
 
-The project was developed from scratch with Frontend and Backend technologies, for the communication between the client and the server I implemented a REST API, which is responsible for returning the necessary data in JSON format to the client:
+  ```bash
+  git clone https://github.com/votre-utilisateur/todo-app-flask-reactjs.git
+  cd todo-app-flask-reactjs
+  ```
 
-- Frontend:
-  - ReactJS
-  - SCSS
-  - Styled Components
+2. Construisez et démarrez les conteneurs Docker :
 
-- Backend:
-  - Python (Flask)
-  - SQLite (As database manager)
-  - Flask Migrate (To perform migrations)
-  - SQLAlchemy and Flask SQLAlchemy (Python SQL toolkit and ORM that gives application developers the full power and flexibility of SQL)
-  - REST API (For communication between client and server)
+  ```bash
+  docker-compose up --build
+  ```
 
-## Project requirements and how to use it
+3. Accédez à l'application dans votre navigateur à l'adresse suivante :
 
-For the project you must run both development environments at the same time, both the Frontend and the Backend. In the Frontend you will find JavaScript technologies (ReactJS) and in the Backend you will find Python technologies and tools (Flask), so you must have NodeJS and Python installed on your computer (As a reference this project was developed with version 3.9.6 of Python and 18.12.1 of NodeJS).
+  ```
+  http://localhost:3000
+  ```
 
-I leave you links to NodeJS and Python for installation:
-  - [NodeJS website](https://nodejs.org/en/)
-  - [Python website](https://www.python.org/)
+## Structure du projet
 
-First of all download the project to start using it, do it from the terminal:
+- `frontend/` - Contient le code ReactJS pour l'interface utilisateur avec son propre Dockerfile.
+- `backend/` - Contient le code Flask pour l'API avec son propre Dockerfile.
+- `docker-compose.yml` - Fichier de configuration pour Docker Compose.
 
-```shell
-$ git clone https://github.com/Remy349/todo-app-flask-reactjs.git
+## Utilisation
 
-$ cd todo-app-flask-reactjs
+- Pour arrêter les conteneurs, utilisez :
+
+  ```bash
+  docker-compose down
+  ```
+
+- Pour reconstruire les conteneurs après avoir apporté des modifications au code, utilisez :
+
+  ```bash
+  docker-compose up --build
+  ```
+
+## Reverse Proxy et Base de Données
+
+Ce projet utilise un reverse proxy pour diriger le trafic vers les conteneurs appropriés. Le reverse proxy est configuré à l'aide de Nginx et est défini dans le fichier `docker-compose.yml`. Cela permet de simplifier l'accès à l'application et de gérer les requêtes de manière efficace.
+
+### Base de Données MySQL
+
+L'application utilise une base de données MySQL pour stocker les données. Le conteneur MySQL est également défini dans le fichier `docker-compose.yml`. Voici comment la base de données est mise en place :
+
+1. Le service MySQL est défini dans `docker-compose.yml` avec les configurations nécessaires telles que le nom de la base de données, l'utilisateur et le mot de passe.
+2. Un conteneur phpMyAdmin est également configuré pour gérer la base de données via une interface web.
+
+### Configuration dans `config.py` de Flask
+
+La configuration de la base de données MySQL dans Flask est définie dans le fichier `config.py`. Voici un exemple de configuration :
+
+```python
+import os
+
+class Config:
+  SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'mysql+pymysql://user:password@db/todoapp')
+  SQLALCHEMY_TRACK_MODIFICATIONS = False
 ```
 
-If you did it correctly and there were no problems, you should see these folders in your terminal:
+Cette configuration utilise les variables d'environnement pour définir l'URI de la base de données, ce qui permet de garder les informations sensibles hors du code source. Nous avons utilisé la dépendance SQLAlchemy pour interagir avec la base de données de manière ORM (Object-Relational Mapping).
 
-```shell
-/backend
-/frontend
-/preview
-README.md
+### Configuration dans `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  reverse-proxy:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
 ```
 
-### Frontend
+### Accès à phpMyAdmin
 
-If you already have NodeJS installed on your computer perform the following steps to run the Frontend (Remember that the Backend must be running):
+Pour accéder à phpMyAdmin et gérer la base de données MySQL, ouvrez votre navigateur et allez à l'adresse suivante :
 
-1. Move to the `/frontend` folder and run the following command to install the necessary:
-
-```shell
-# This will install what you need for the Frontend (npm comes with NodeJS after installation)
-$ npm install
+```
+http://localhost:8080
 ```
 
-2. Then you will need to run the following command to start running the Frontend:
+Utilisez les informations d'identification configurées dans le fichier `docker-compose.yml` pour vous connecter.
 
-```shell
-$ npm run dev
+## Healthchecks
 
-# You will see something like this:
-> frontend@0.0.0 dev
-> vite
+Des healthchecks sont mis en place pour s'assurer que les conteneurs fonctionnent correctement. Ces vérifications permettent de redémarrer automatiquement les conteneurs en cas de défaillance. Les healthchecks sont définis dans le fichier `docker-compose.yml` pour les services critiques tels que le backend et la base de données.
 
-  VITE v3.2.4  ready in 2079 ms
+### Exemple de Healthcheck pour le Backend
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
+```yaml
+services:
+  backend:
+    build: ./backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 ```
 
-3. That's all for the Frontend, if you haven't run the Backend yet, continue with the next section (Backend)
+## Dockerfile
 
-### Backend
+Chaque service de l'application a son propre Dockerfile qui définit l'environnement et les étapes nécessaires pour construire l'image Docker. Voici un aperçu des Dockerfiles pour le frontend et le backend.
 
-If you already have Python installed on your computer perform the following steps to run the Backend
+### Dockerfile pour le Frontend
 
-1. Move to the `/backend` folder and run the following command to create a virtual development environment with Python:
+```dockerfile
+# Utilise une image de base Node.js
+FROM node:14
 
-```shell
-# If it doesn't work this way try "python3", this will depend on how you installed Python on your computer
-$ python -m venv venv
+# Définit le répertoire de travail
+WORKDIR /app
+
+# Copie les fichiers package.json et package-lock.json
+COPY package*.json ./
+
+# Installe les dépendances
+RUN npm install
+
+# Copie le reste des fichiers de l'application
+COPY . .
+
+# Construit l'application pour la production
+RUN npm run build
+
+# Expose le port 3000
+EXPOSE 3000
+
+# Démarre l'application
+CMD ["npm", "start"]
 ```
 
-2. Now activate the development environment and install the necessary requirements found in the `requirements.txt` file:
+### Dockerfile pour le Backend
 
-```shell
-# This is how it is done in Linux, in Windows it is as follows "venv\Scripts\activate"
-$ . venv/bin/activate
-# Now install the necessary requirements using "pip" or "pip3",
-# this will depend on how you installed Python on your computer
-(venv) $ pip install -r requirements.txt
+```dockerfile
+# Utilise une image de base Python
+FROM python:3.8-slim
+
+# Définit le répertoire de travail
+WORKDIR /app
+
+# Copie le fichier requirements.txt
+COPY requirements.txt ./
+
+# Installe les dépendances
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copie le reste des fichiers de l'application
+COPY . .
+
+# Expose le port 5000
+EXPOSE 5000
+
+# Démarre l'application
+CMD ["python", "app.py"]
 ```
 
-3. Now you can start running the server:
+## Docker Compose
 
-```shell
-(venv) $ flask run
+Le fichier `docker-compose.yml` est utilisé pour définir et gérer les services Docker de l'application. Il permet de configurer les conteneurs, les réseaux, les volumes et les dépendances entre les services.
 
-# You will see something like this:
-DATABASE_URI is OK!!!
- * Serving Flask app 'application.py'
- * Debug mode: on
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on http://127.0.0.1:5000
-Press CTRL+C to quit
+### Exemple de Configuration dans `docker-compose.yml`
+
+```yaml
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: mydb
+    networks:
+      - app_network
+    depends_on:
+      - mysql
+      - migrate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - app_network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "8081:80"
+    networks:
+      - app_network
+
+  migrate:
+    build: ./backend
+    command: flask db upgrade
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: mydb
+    networks:
+      - app_network
+    depends_on:
+      - mysql
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"
+    networks:
+      - app_network
+    depends_on:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
 ```
 
-With this you will have your Python environment ready to work, it also has a database so you don't have to worry about that and it already has some data already entered so you can interact with the REST API.
+### Explication de la Configuration
 
-But if you want to start blank with no previously stored data delete the database and run the following command to create a new database (This step is optional):
+- `version: '3.8'`: Spécifie la version de Docker Compose à utiliser.
+- `services`: Définit les différents services de l'application.
 
-```shell
-# This will create a new database with the necessary tables to store the data 
-# if you want to know the table structure have a look at the "/flaskr/models.py" file.
-(venv) $ flask db upgrade
-```
+  - `backend`: Service pour l'application Flask.
+    - `build`: Chemin vers le Dockerfile du backend.
+    - `ports`: Mappe le port 5000 du conteneur au port 5000 de l'hôte.
+    - `environment`: Définit les variables d'environnement pour MySQL.
+    - `networks`: Associe le service au réseau `app_network`.
+    - `depends_on`: Indique que le service backend dépend des services mysql et migrate.
+    - `healthcheck`: Vérifie la santé du service backend.
 
-### REST API
+  - `frontend`: Service pour l'application ReactJS.
+    - `build`: Chemin vers le Dockerfile du frontend.
+    - `ports`: Mappe le port 3000 du conteneur au port 3000 de l'hôte.
+    - `networks`: Associe le service au réseau `app_network`.
+    - `depends_on`: Indique que le service frontend dépend du service backend.
+    - `healthcheck`: Vérifie la santé du service frontend.
 
-Everything related to the API is inside `flaskr/api/tasks.py`. The following table summarizes the routes that were implemented:
+  - `mysql`: Service pour la base de données MySQL.
+    - `image`: Utilise l'image MySQL version 8.0.
+    - `environment`: Définit les variables d'environnement pour MySQL.
+    - `volumes`: Monte le volume `mysql_data` pour persister les données.
+    - `networks`: Associe le service au réseau `app_network`.
+    - `healthcheck`: Vérifie la santé du service MySQL.
 
-| HTTP Method | Resource URL        | Notes                                   |
-| ----------- | ------------------- | --------------------------------------- |
-| `GET`       | */api/tasks*        | Return the collection of all tasks.     |
-| `GET`       | */api/tasks/id*     | Return a single task.                   |
-| `POST`      | */api/tasks*        | Register a new task.                    |
-| `PUT`       | */api/tasks/id*     | Modify the values of a task.            |
-| `DELETE`    | */api/tasks/id*     | Delete a task from the collection.      |
+  - `phpmyadmin`: Service pour phpMyAdmin.
+    - `image`: Utilise l'image phpMyAdmin.
+    - `environment`: Définit les variables d'environnement pour phpMyAdmin.
+    - `ports`: Mappe le port 8081 du conteneur au port 80 de l'hôte.
+    - `networks`: Associe le service au réseau `app_network`.
 
-The API provides the responses in JSON format that the Frontend needs, plus a pagination method was implemented to not send multiple data and thus not overload the client interface.
+  - `migrate`: Service pour exécuter les migrations de la base de données.
+    - `build`: Chemin vers le Dockerfile du backend.
+    - `command`: Commande pour exécuter les migrations.
+    - `environment`: Définit les variables d'environnement pour MySQL.
+    - `networks`: Associe le service au réseau `app_network`.
+    - `depends_on`: Indique que le service migrate dépend du service mysql.
 
-If you make a `GET` request for all tasks you will see something like this:
+  - `nginx`: Service pour le reverse proxy Nginx.
+    - `image`: Utilise l'image Nginx.
+    - `volumes`: Monte le fichier de configuration Nginx.
+    - `ports`: Mappe le port 80 du conteneur au port 80 de l'hôte.
+    - `networks`: Associe le service au réseau `app_network`.
+    - `depends_on`: Indique que le service nginx dépend des services frontend et backend.
+    - `healthcheck`: Vérifie la santé du service Nginx.
 
-- `http://localhost:5000/api/tasks`
-
-```shell
-{
-  "items": [
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 1,
-      "timestamp": "Tue, 20 Dec 2022 02:25:49 GMT",
-      "title": "Test1"
-    },
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 2,
-      "timestamp": "Tue, 20 Dec 2022 02:26:02 GMT",
-      "title": "Test2"
-    },
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 3,
-      "timestamp": "Tue, 20 Dec 2022 02:26:09 GMT",
-      "title": "Test3"
-    },
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 4,
-      "timestamp": "Tue, 20 Dec 2022 02:26:22 GMT",
-      "title": "Test4"
-    },
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 6,
-      "timestamp": "Tue, 20 Dec 2022 02:27:23 GMT",
-      "title": "Test5"
-    },
-    {
-      "description": "Just doing some test to finally complete this project! :)",
-      "id_task": 7,
-      "timestamp": "Tue, 20 Dec 2022 04:37:03 GMT",
-      "title": "Test6"
-    }
-  ],
-  "links": {
-    "next": "/api/tasks?page=2&per_page=6",
-    "prev": null,
-    "self": "/api/tasks?page=1&per_page=6"
-  },
-  "meta": {
-    "page": 1,
-    "per_page": 6,
-    "total_items": 7,
-    "total_pages": 2
-  }
-}
-```
-
-## Image gallery
-
-### Desktop:
-
-![PREVIEW](./preview/preview.png)
-![PREVIEW](./preview/preview1.png)
-
-### Mobile
-
-<table>
-  <tr>
-    <td>
-      <img src="./preview/preview-m.png" alt="Mobile" title="Mobile version" width="100%" />
-    </td>
-    <td>
-      <img src="./preview/preview-m1.png" alt="Mobile" title="Mobile version" width="100%" />
-    </td>
-    <td>
-      <img src="./preview/preview-m2.png" alt="Mobile" title="Mobile version" width="100%" />
-    </td>
-  </tr>
-</table>
-
-### Developed by Santiago de Jesús Moraga Caldera - Remy349(GitHub)
+- `networks`: Définit le réseau `app_network` utilisé par les services.
+- `volumes`: Définit le volume `mysql_data` pour persister les données MySQL.

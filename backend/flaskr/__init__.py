@@ -17,50 +17,29 @@ def create_app(testing_config=None):
     else:
         app.config.from_object(testing_config)
 
+    # Initialiser les extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     api.init_app(app)
     cors.init_app(app)
 
+    # Enregistrer les blueprints
+    app.register_blueprint(user_controller, url_prefix="/api")
+    app.register_blueprint(auth_controller, url_prefix="/api")
+    app.register_blueprint(category_controller, url_prefix="/api")
+
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
-        return (
-            jsonify(
-                {
-                    "message": "The token has expired.",
-                    "error": "token_expired",
-                }
-            ),
-            401,
-        )
+        return jsonify({
+            'status': 401,
+            'sub_status': 42,
+            'message': 'The token has expired'
+        }), 401
 
-    @jwt.invalid_token_loader
-    def invalid_token_callback(error):
-        return (
-            jsonify(
-                {
-                    "message": "Signature verification failed.",
-                    "error": "invalid_token",
-                }
-            ),
-            401,
-        )
-
-    @jwt.unauthorized_loader
-    def missing_token_callback(error):
-        return (
-            jsonify(
-                {
-                    "description": "Request does not contain an access token.",
-                    "error": "authorization_required",
-                }
-            ),
-            401,
-        )
-
-    api.register_blueprint(user_controller, url_prefix="/api")
-    api.register_blueprint(auth_controller, url_prefix="/api")
-    api.register_blueprint(category_controller, url_prefix="/api")
+    # Ajouter une route de santé
+    @app.route('/health', methods=['GET'])
+    def health():
+        return jsonify({'status': 'healthy'}), 200
 
     return app

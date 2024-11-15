@@ -124,54 +124,42 @@ Chaque service de l'application a son propre Dockerfile qui définit l'environne
 ### Dockerfile pour le Frontend
 
 ```dockerfile
-# Utilise une image de base Node.js
-FROM node:14
+# Utiliser une image de base Node.js
+FROM node:16-alpine
 
-# Définit le répertoire de travail
+# Définir le répertoire de travail dans le conteneur
 WORKDIR /app
 
-# Copie les fichiers package.json et package-lock.json
+# Copier le fichier package.json et package-lock.json
 COPY package*.json ./
 
-# Installe les dépendances
+# Installer les dépendances
 RUN npm install
 
-# Copie le reste des fichiers de l'application
+# Copier le reste des fichiers de l'application
 COPY . .
 
-# Construit l'application pour la production
-RUN npm run build
-
-# Expose le port 3000
+# Exposer le port utilisé par l'application React (par défaut 3000)
 EXPOSE 3000
 
-# Démarre l'application
-CMD ["npm", "start"]
+# Démarrer l'application en mode développement
+CMD ["npm", "run", "dev"]
 ```
 
 ### Dockerfile pour le Backend
 
 ```dockerfile
-# Utilise une image de base Python
-FROM python:3.8-slim
+FROM python:3.9-slim
 
-# Définit le répertoire de travail
 WORKDIR /app
 
-# Copie le fichier requirements.txt
-COPY requirements.txt ./
+COPY . /app
 
-# Installe les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copie le reste des fichiers de l'application
-COPY . .
-
-# Expose le port 5000
 EXPOSE 5000
 
-# Démarre l'application
-CMD ["python", "app.py"]
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
 ```
 
 ## Docker Compose

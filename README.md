@@ -1,5 +1,10 @@
 # Todo App Flask ReactJS Docker
 
+
+## Avertissement
+
+Veuillez noter qu'il peut y avoir un délai lors du démarrage complet de tous les conteneurs en raison des healthchecks configurés avec des intervalles de vérification. Assurez-vous de patienter quelques instants pour que tous les services soient opérationnels avant d'accéder à l'application.
+
 ## Prérequis
 
 Avant de commencer, assurez-vous d'avoir installé les éléments suivants :
@@ -315,7 +320,3 @@ volumes:
 
 - `networks`: Définit le réseau `app_network` utilisé par les services.
 - `volumes`: Définit le volume `mysql_data` pour persister les données MySQL.
-
-## Avertissement
-
-Veuillez noter qu'il peut y avoir un délai lors du démarrage complet de tous les conteneurs en raison des healthchecks configurés avec des intervalles de vérification. Assurez-vous de patienter quelques instants pour que tous les services soient opérationnels avant d'accéder à l'application.

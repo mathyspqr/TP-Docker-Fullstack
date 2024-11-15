@@ -78,7 +78,7 @@ class Config:
 
 Cette configuration utilise les variables d'environnement pour définir l'URI de la base de données, J'ai utilisé la dépendance SQLAlchemy pour interagir avec la base de données MySQL.
 
-### Configuration dans `docker-compose.yml`
+### Configuration dans du reverse proxy nginx `docker-compose.yml`
 
 ```yaml
 version: '3.8'
@@ -288,7 +288,7 @@ volumes:
     - `depends_on`: Indique que le service backend dépend des services mysql et migrate.
     - `healthcheck`: Vérifie la santé du service backend.
 
-  - `frontend`: Service pour l'application ReactJS.
+  - `frontend`: Service pour l'application React.
     - `build`: Chemin vers le Dockerfile du frontend.
     - `ports`: Mappe le port 3000 du conteneur au port 3000 de l'hôte.
     - `depends_on`: Indique que le service frontend dépend du service backend.
@@ -297,7 +297,7 @@ volumes:
   - `mysql`: Service pour la base de données MySQL.
     - `image`: Utilise l'image MySQL version 8.0.
     - `environment`: Définit les variables d'environnement pour MySQL.
-    - `volumes`: Monte le volume `mysql_data` pour persister les données.
+    - `volumes`: Monte le volume `mysql_data` pour conserver les données.
     - `healthcheck`: Vérifie la santé du service MySQL.
 
   - `phpmyadmin`: Service pour phpMyAdmin.
@@ -319,4 +319,4 @@ volumes:
     - `healthcheck`: Vérifie la santé du service Nginx.
 
 - `networks`: Définit le réseau `app_network` utilisé par les services.
-- `volumes`: Définit le volume `mysql_data` pour persister les données MySQL.
+- `volumes`: Définit le volume `mysql_data` pour conserver les données MySQL.
